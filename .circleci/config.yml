@@ -1,0 +1,77 @@
+version: 2
+jobs:
+  deploy-front-prod:
+    docker:
+      - image: circleci/node:8.10
+    environment:
+      AWS_CONFIG_PATH: /home/circleci/.aws
+    steps:
+      - checkout
+      - restore_cache: &restore_front_cache
+          key: dependency-cache-{{ checksum "./yarn.lock" }}
+      - run: &build_aws_config
+          name: Build AWS config
+          command: |
+            sudo mkdir $AWS_CONFIG_PATH
+            sudo AWS_CONFIG_PATH=$AWS_CONFIG_PATH aws_access_key_id_prod=$aws_access_key_id_prod aws_secret_access_key_prod=$aws_secret_access_key_prod node build_aws_profile
+      - run: &install_front_dependencies
+          name: Install dependencies
+          command: |
+            yarn global add serverless@1.51.0
+            yarn install
+      - save_cache: &save_front_cache
+          key: dependency-cache-{{ checksum "./yarn.lock" }}
+          paths:
+            - ./node_modules
+      - run:
+          name: Build env
+          command: |
+            yarn create-env
+      - run:
+          name: Build frontend
+          command: |
+            yarn build
+      - run:
+          name: Deploy frontend
+          command: |
+            yarn deploy
+
+  deploy-front-stage:
+    docker:
+      - image: circleci/node:8.10
+    environment:
+      AWS_CONFIG_PATH: /home/circleci/.aws
+    steps:
+      - checkout
+      - restore_cache: *restore_front_cache
+      - run: *build_aws_config
+      - run: *install_front_dependencies
+      - save_cache: *save_front_cache
+      - run:
+          name: Build env
+          command: |
+            yarn create-env
+      - run:
+          name: Build frontend
+          command: |
+            yarn build
+      - run:
+          name: Deploy frontend
+          command: |
+            yarn deploy
+
+workflows:
+  version: 2
+  deploy:
+    jobs:
+      - deploy-front-prod:
+          context: production
+          filters:
+            branches:
+              only:
+                - master
+      - deploy-front-stage:
+          context: staging
+          filters:
+            branches:
+              only: /release-.+/

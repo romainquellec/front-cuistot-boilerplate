@@ -1,0 +1,7 @@
+# serverless.yml
+myNextApp:
+  component: "serverless-next.js"
+  inputs:
+    bucketName: my-bucket
+    domain: "example.com"
+    build: false
