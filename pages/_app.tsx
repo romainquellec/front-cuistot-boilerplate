@@ -7,19 +7,10 @@ import { initGA, logPageView } from "../shared/analytics";
 import theme from "../src/theme";
 
 export default class MyApp extends App {
-  public static async getInitialProps({ Component, router, ctx }) {
-    let pageProps = {}
-
-    if (Component.getInitialProps) {
-      pageProps = await Component.getInitialProps(ctx)
-    }
-
-    return { pageProps }
-  }
-
   public componentDidMount() {
     initGA();
     logPageView();
+    // @ts-ignore
     Router.router.events.on("routeChangeComplete", logPageView);
     // Remove the server-side injected CSS.
     const jssStyles = document.querySelector("#jss-server-side");

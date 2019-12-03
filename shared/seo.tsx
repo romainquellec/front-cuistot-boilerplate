@@ -1,6 +1,6 @@
 import NextSeo from "next-seo";
 
-export const renderSEO = (meta, cleanPath) => {
+export const renderSEO = (meta: any, cleanPath: string) => {
   const configSEO = {
     canonical: "",
     description:
